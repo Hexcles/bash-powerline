@@ -96,7 +96,7 @@ __powerline() {
         # Copied from Python virtualenv's activate.sh script.
         # https://github.com/pypa/virtualenv/blob/a9b4e673559a5beb24bac1a8fb81446dd84ec6ed/virtualenv_embedded/activate.sh#L62
         # License: MIT
-        if [ "x$VIRTUAL_ENV" != "x" ]; then
+        if [ "x${VIRTUAL_ENV-}" != "x" ]; then
             if [ "`basename \"$VIRTUAL_ENV\"`" == "__" ]; then
                 # special case for Aspen magic directories
                 # see http://www.zetadev.com/software/aspen/
@@ -131,10 +131,28 @@ __powerline() {
             local BG_EXIT="$BG_RED"
         fi
 
+        # Bash by default expands the content of PS1 unless promptvars is disabled.
+        # We must use another layer of reference to prevent expanding any user
+        # provided strings, which would cause security issues.
+        # POC: https://github.com/njhartwell/pw3nage
+        # Related fix in git-bash: https://github.com/git/git/blob/9d77b0405ce6b471cb5ce3a904368fc25e55643d/contrib/completion/git-prompt.sh#L324
+        __powerline_virtualenv="$(__virtualenv)"
+        __powerline_pwd="$(__pwd)"
+        __powerline_git_info="$(__git_info)"
         PS1=""
-        PS1+="$BG_BASE0$FG_BASE3$(__virtualenv)$RESET"
-        PS1+="$BG_BASE1$FG_BASE3 $(__pwd) $RESET"
-        PS1+="$BG_BLUE$FG_BASE3$(__git_info)$RESET"
+        if shopt -q promptvars; then
+            PS1+="$BG_BASE0$FG_BASE3\${__powerline_virtualenv}$RESET"
+            PS1+="$BG_BASE1$FG_BASE3 \${__powerline_pwd} $RESET"
+            PS1+="$BG_BLUE$FG_BASE3\${__powerline_git_info}$RESET"
+        else
+            # promptvars is disabled. Directly print out and unset unnecessary vars.
+            PS1+="$BG_BASE0$FG_BASE3${__powerline_virtualenv}$RESET"
+            PS1+="$BG_BASE1$FG_BASE3 ${__powerline_pwd} $RESET"
+            PS1+="$BG_BLUE$FG_BASE3${__powerline_git_info}$RESET"
+            unset __powerline_virtualenv
+            unset __powerline_pwd
+            unset __powerline_git_info
+        fi
         PS1+="$BG_EXIT$FG_BASE3 $PS_SYMBOL $RESET "
     }
 

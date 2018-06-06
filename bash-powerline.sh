@@ -2,8 +2,10 @@
 
 __powerline() {
 
+    readonly DISABLE_GIT_STATUS=${DISABLE_GIT_STATUS:-''}
+
     # Max length of full path
-    readonly MAX_PATH_LENGTH=30
+    readonly MAX_PATH_LENGTH=${MAX_PATH_LENGTH:-30}
 
     # Unicode symbols
     readonly PS_SYMBOL_DARWIN=''
@@ -78,15 +80,17 @@ __powerline() {
 
         local marks
 
-        # branch is modified?
-        [ -n "$($git_eng status --porcelain 2>/dev/null)" ] && marks+=" $GIT_BRANCH_CHANGED_SYMBOL"
+        if [ -z "$DISABLE_GIT_STATUS" ]; then
+            # branch is modified?
+            [ -n "$($git_eng status --porcelain 2>/dev/null)" ] && marks+=" $GIT_BRANCH_CHANGED_SYMBOL"
 
-        # how many commits local branch is ahead/behind of remote?
-        local stat="$($git_eng status --porcelain --branch 2>/dev/null | grep '^##' | grep -o '\[.\+\]$')"
-        local aheadN="$(echo $stat | grep -o 'ahead [[:digit:]]\+' | grep -o '[[:digit:]]\+')"
-        local behindN="$(echo $stat | grep -o 'behind [[:digit:]]\+' | grep -o '[[:digit:]]\+')"
-        [ -n "$aheadN" ] && marks+=" $GIT_NEED_PUSH_SYMBOL$aheadN"
-        [ -n "$behindN" ] && marks+=" $GIT_NEED_PULL_SYMBOL$behindN"
+            # how many commits local branch is ahead/behind of remote?
+            local stat="$($git_eng status --porcelain --branch 2>/dev/null | grep '^##' | grep -o '\[.\+\]$')"
+            local aheadN="$(echo $stat | grep -o 'ahead [[:digit:]]\+' | grep -o '[[:digit:]]\+')"
+            local behindN="$(echo $stat | grep -o 'behind [[:digit:]]\+' | grep -o '[[:digit:]]\+')"
+            [ -n "$aheadN" ] && marks+=" $GIT_NEED_PUSH_SYMBOL$aheadN"
+            [ -n "$behindN" ] && marks+=" $GIT_NEED_PULL_SYMBOL$behindN"
+        fi
 
         # print the git branch segment without a trailing newline
         printf " $GIT_BRANCH_SYMBOL$branch$marks "

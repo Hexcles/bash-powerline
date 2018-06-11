@@ -75,7 +75,7 @@ __powerline() {
 
         local git_eng="env LANG=C git"   # force git output in English to make our work easier
         # get current branch name or short SHA1 hash for detached head
-        local branch="$($git_eng symbolic-ref --short HEAD 2>/dev/null || $git_eng describe --tags --always 2>/dev/null)"
+        local branch="$($git_eng symbolic-ref -q --short HEAD 2>/dev/null || $git_eng rev-list --abbrev-commit --max-count=1 HEAD 2>/dev/null)"
         [ -n "$branch" ] || return  # git branch not found
 
         local marks
